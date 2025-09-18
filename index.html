@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentHub House Solution</title>
+    <link rel="stylesheet" href="Css/style.css">
+    <link rel="shortcut icon" href="media/logo2.jpg" type="image/*">
+    <link rel="stylesheet" href="font-awasome/css/all.min.css">    
+
+<style>
+    .image-wrapper {
+  position: relative;
+}
+.tel{
+  text-decoration: none;
+  font-weight: bold;
+  color: #2c3e50;
+}
+body.no-scroll {
+    overflow: hidden;
+    pointer-events: none;
+}
+body.no-scroll .loading-screen {
+    pointer-events: auto;
+}
+.selected-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(243, 156, 18, 0.9);
+  color: white;
+  font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 10;
+  text-transform: uppercase;
+}
+footer { 
+    text-align:center; 
+    padding:20px; 
+    background:#2c3e50; 
+    color:white; 
+    margin-top:20px;
+    border-radius: 10px;
+}
+.property-media-wrapper {
+  position: relative;
+}
+.play-video-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  border-radius: 50%;
+  padding: 15px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+.play-video-overlay:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  background: rgba(0,0,0,0.7);
+}
+/* Select button below description */
+.property-details .select-btn {
+  margin-top: 10px;
+  padding: 13px 15px;
+  background-color: #f39c12;
+  border: none;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.property-details .select-btn.selected {
+  background-color: #27ae60;
+  cursor: default;
+}
+/* Video Modal */
+#videoModal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+}
+#videoModal video {
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 10px;
+}
+#videoModal .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 30px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10000;
+}
+/* Responsive Styles */
+@media (min-width: 1200px) {
+  #signUpBtn {
+    top: 30px;
+    left: -10rem;
+    font-size: 14px;
+  }
+}
+@media (max-width: 1199.98px) {
+    .sidebar { width: 250px; }
+    .main-content { margin-left: 20px; }
+    .property-grid { grid-template-columns: repeat(3, 1fr); }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    #signUpBtn { top: 25px; left: -8rem; font-size: 15px; }
+}
+@media (min-width: 900px) and (max-width: 991.98px) {
+    .sidebar { width: 100%; height: auto; position: fixed; bottom: 0; z-index: 100; padding: 10px 0; }
+    .sidebar-header, .user-profile { display: none; }
+    .menu { display: flex; justify-content: space-around; padding: 0 10px; }
+    .menu li { margin-bottom: 0; }
+    .menu a { flex-direction: column; gap: 5px; padding: 10px; font-size: 12px; }
+    .menu span { font-size: 12px; }
+    .logout-btn { display: none; }
+    .loading-logo { margin-bottom: 1.5rem; }
+    .loading-text { font-size: 1.1rem; }
+    .progress-bar { height: 6px; }
+    .main-content { margin-left: 10px; }
+    .property-grid { grid-template-columns: repeat(2, 1fr); }
+    .contact-info { grid-template-columns: repeat(2, 1fr); }
+    .welcome-banner h2 { font-size: 1.8rem; }
+    .welcome-banner p { font-size: 1rem; }
+    #signUpBtn { top: 20px; left: -6rem; font-size: 14px; }
+}
+@media (max-width: 767.98px) {
+    .sidebar { width: 70px; overflow: hidden; }
+    .loading-logo i { font-size: 2.5rem; }
+    .loading-text { font-size: 1rem; padding: 0 1rem; }
+    .progress-bar { width: 90%; height: 5px; }
+    .dot { width: 8px; height: 8px; }
+    .sidebar .menu span { display: none; }
+    .sidebar .menu i { font-size: 1.5rem; }
+    .main-content { margin-left: 70px; }
+    .property-grid, .features-grid, .contact-info { grid-template-columns: 1fr; }
+    .user-info a { position: static; display: block; margin: 0.5rem auto; text-align: center; }
+    .logout { bottom: 150px; }
+    #signUpBtn { position: relative; top: auto; left: auto; margin: 10px auto; display: block; width: 90%; text-align: center; font-size: 14px; }
+    .header-title h2 { font-size: 1.2rem; }
+    .welcome-banner h2 { font-size: 1.5rem; }
+    .welcome-banner p { font-size: 0.9rem; }
+    .content-section { padding: 15px; }
+    .property-card { width: 100%; }
+    .property-image { height: 140px; }
+    .profile-avatar { width: 30px; height: 30px; fill: white; position: relative; left: -4.2rem; }
+    .profile-name{ position: relative; left: -1.2rem; top: -1rem; font-size: 15px; }
+    .profile-status{ position: relative; left: -1.8rem; top: -1.8rem; }
+    .selected-badge { font-size: 0.7rem; padding: 3px 8px; }
+}
+@media (max-width: 575.98px) {
+    .sidebar { position: fixed; width: 100%; height: 60px; bottom: 0; top: auto; z-index: 1000; display: flex; align-items: center; padding: 0; }
+    .loading-logo { margin-bottom: 1rem; }
+    .loading-logo h1 { font-size: 1.5rem; }
+    .loading-text { font-size: 0.9rem; }
+    .progress-text { font-size: 0.8rem; }
+    .loading-dots { margin-top: 1rem; }
+    .sidebar .menu { display: flex; height: auto; margin-top: 0; width: 100%; justify-content: space-around; font-size: 20px; }
+    .sidebar .menu li { padding: 1.5rem; margin: 0; }
+    .main-content { margin-left: 0; margin-bottom: 60px; }
+    .menu li a{ padding: 0.40rem; margin: 0px 0; }
+}
+
+
+</style>
+</head>
+<body>
+<div class="loading-screen" id="loadingScreen">
+<div class="loading-logo">
+<i class="fas fa-home"></i>
+<h1>RentHub House Solution</h1>
+</div>
+        
+<div class="loading-text">Finding your perfect home...</div>
+        
+<div class="loading-spinner">
+<div class="spinner"></div>
+</div>
+        
+<div class="progress-bar">
+<div class="progress-fill"></div>
+</div>
+        
+<div class="progress-text">
+<span id="progressText">0%</span>
+</div>
+        
+<div class="loading-dots">
+<div class="dot"></div>
+<div class="dot"></div>
+<div class="dot"></div>
+</div>
+</div>
+    
+    <div class="sidebar">
+        <div class="sidebar-header"></div>
+        <div class="logos"></div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="profile-avatar">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+            <br>
+            <div class="profile-name" id="userName"></div><br>
+            <div class="profile-status">Online</div>
+        </div>
+        
+        <ul class="menu">
+            <li>
+                <a href="#" onclick="showSection('home-section')"><i class="fas fa-blackboard" style="color: lightsalmon;"></i>
+                    <span style="font-size: 17px;">Dashboard</span>
+                </a>
+            </li>
+            <br>
+            <li >
+                <a href="#" onclick="showSection('about-section')"><i class="fas fa-cog" style="color: mediumseagreen;"></i>
+                    <span style="font-size: 16px;">About Us</span>
+                </a>
+            </li>
+            <br>
+            <li >
+                <a href="#" onclick="showSection('contact-section')"><i class="fas fa-phone" style="color: lightskyblue;"></i>
+                    <span>Contact</span>
+                </a>
+            </li>
+            <br>
+            <li id="signUpMenu">
+                <a href="Login.html" id="signUpBtn"> <i class="fas fa-user-plus" style="color: chocolate"></i>
+                    <span>Sign Up</span>
+                </a>
+            </li>
+
+           <li class="logout" id="logoutMenu" style="display: none;">
+<a href="#" id="Logouts"><i class="fas fa-sign-out-alt" style="color: darkgoldenrod;"></i>
+<span>Logout</span>
+</a>
+</li>
+
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div class="header-wrapper" style="background: linear-gradient(rgba(59, 59, 20, 0.78));">
+            <div class="header-title">
+                <h2 style="color: whitesmoke;">House Rental Company Lmt</h2>
+            </div>
+        </div>
+        
+       
+        
+        <div class="content-section active" id="home-section">
+            <div class="welcome-banner">
+                <h2>Find Your Perfect Home</h2>
+                <p>Browse through our selection of properties in Rwanda</p>
+            </div>
+            
+            <div class="location-selector">
+                <select id="location-filter" onchange="renderIndexProperties()">
+                    <option value="All">All Locations</option>
+                    <option value="Kigali">Kigali</option>
+                    <option value="Musanze">Musanze</option>
+                    <option value="Nyagatare">Nyagatare</option>
+                    <option value="Huye">Huye</option>
+                    <option value="Rubavu">Rubavu</option>
+                </select>
+            </div>
+            
+            <div class="property-grid" id="propertiesContainer">
+                <!-- Properties will be loaded here dynamically -->
+            </div>
+            
+        </div>
+        
+        <div class="content-section" id="about-section">
+            <div class="features-container">
+                <h2>Why Choose RentHub?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Smart Search</h3>
+                        <p>Find properties that match your exact needs with our advanced filtering system and AI-powered recommendations.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Verified Listings</h3>
+                        <p>All properties are verified by our team to ensure authenticity and quality. No fake listings, guaranteed.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <h3>Direct Contact</h3>
+                        <p>Connect directly with property owners without middlemen. Save on broker fees and communicate directly.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>Mobile First</h3>
+                        <p>Search, contact, and manage your rentals on the go with our mobile-optimized platform.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3>24/7 Support</h3>
+                        <p>Our dedicated support team is available around the clock to help you with any questions or issues.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h3>Save Favorites</h3>
+                        <p>Create wishlists, save your favorite properties, and get notified when similar properties become available.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section" id="contact-section">
+            <h2 style="color: darkgray;">Contact Us</h2><br>
+            <p style="color: darkgray;">Have questions or need assistance? Reach out to us through any of the following channels:</p>
+            
+            <div class="contact-info">
+                <div class="contact-card">
+                    <h3>Customer Support</h3>
+                    <p><strong>Email:</strong> keangmaclaren@gmail.com</p>
+                    <p><strong>Phone:</strong> +250 796 106 900</p>
+                    <p><strong>Name:</strong> Mussa Musafiri</p>
+                    <p><strong>Hours:</strong> Mon-Fri, 8AM-5PM</p>
+                </div>
+                <div class="contact-card">
+                    <h3>Sales Inquiries</h3>
+                    <p><strong>Email:</strong> rwemagairakose@gmail.com</p>
+                    <p><strong>Phone:</strong> +250 790 743 274</p>
+                    <p><strong>Hours:</strong> Mon-Fri, 9AM-6PM</p>
+                </div>
+                <div class="contact-card">
+                    <h3>Head Office</h3>
+                    <p>MZ 123 St, Musanze</p>
+                    <p>Musanze District</p>
+                    <p>Rwanda</p>
+                </div>
+            </div>
+        </div>
+        <div id="videoModal">
+    <span class="close-btn">&times;</span>
+    <video id="modalVideo" controls></video>
+</div>
+        <footer>
+        <p>&copy; 2025 Online RentHub House Property. All rights reserved.</p>
+    </footer>
+    </div>
+    <script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Supabase public anon key and URL
+const SUPABASE_URL = 'https://wnxhkgfgllgnegsataml.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndueGhrZ2ZnbGxnbmVnc2F0YW1sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE2ODYzOSwiZXhwIjoyMDczNzQ0NjM5fQ.bAqRDpDvS43ceYM04iKZT3BYkdtipnPwSAKJVqif0-8';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const propertiesContainer = document.getElementById('propertiesContainer');
+const locationFilter = document.getElementById('location-filter');
+
+// Track current user (for demo, use random id or integrate auth later)
+const CURRENT_USER_ID = Math.floor(Math.random() * 1000000);
+
+async function renderIndexProperties() {
+  const location = locationFilter.value;
+  let query = supabase.from('properties')
+    .select(`
+      *,
+      selected_properties:user_id
+    `)
+    .order('created_at', { ascending: false });
+
+  const { data: properties, error } = await query;
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  propertiesContainer.innerHTML = '';
+
+  properties.forEach(prop => {
+    // Check if property is already selected
+    const isSelected = prop.selected_properties?.length > 0;
+
+    const propCard = document.createElement('div');
+    propCard.className = 'property-card';
+
+    const imageUrl = prop.image_url || 'media/default.jpg';
+    const videoUrl = prop.video_url;
+
+    propCard.innerHTML = `
+      <div class="property-media-wrapper">
+        <img src="${imageUrl}" alt="${prop.title}" class="property-image">
+        ${videoUrl ? `<div class="play-video-overlay" onclick="playVideo('${videoUrl}')"><i class="fas fa-play"></i></div>` : ''}
+        ${isSelected ? '<div class="selected-overlay">Selected</div>' : ''}
+      </div>
+      <div class="property-details">
+        <h3>${prop.title}</h3>
+        <p>${prop.description}</p>
+        <p><strong>Location:</strong> ${prop.location}</p>
+        <p><strong>Price:</strong> $${prop.price}</p>
+        <p><strong>Owner:</strong> ${prop.owner}</p>
+        <p><strong>Phone:</strong> <a class="tel" href="tel:${prop.phone}">${prop.phone}</a></p>
+        <button class="select-btn" ${isSelected ? 'disabled' : ''} onclick="selectHouse(${prop.id}, this)">
+          ${isSelected ? 'Selected' : 'Select House'}
+        </button>
+      </div>
+    `;
+
+    propertiesContainer.appendChild(propCard);
+  });
+}
+
+// Handle selecting a house
+async function selectHouse(propertyId, btn) {
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Selected';
+
+    const { data, error } = await supabase.from('selected_properties').insert([{
+      user_id: CURRENT_USER_ID,
+      property_id: propertyId
+    }]).select();
+
+    if (error) {
+      console.error(error);
+      alert('Failed to select property: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = 'Select House';
+      return;
+    }
+
+    // Refresh properties so others will see it as selected
+    renderIndexProperties();
+  } catch (err) {
+    console.error(err);
+    alert('Error: ' + err.message);
+  }
+}
+
+// Play video modal
+const videoModal = document.getElementById('videoModal');
+const modalVideo = document.getElementById('modalVideo');
+const closeBtn = videoModal.querySelector('.close-btn');
+
+window.playVideo = function(url) {
+  modalVideo.src = url;
+  videoModal.style.display = 'flex';
+  modalVideo.play();
+};
+
+closeBtn.onclick = () => {
+  modalVideo.pause();
+  modalVideo.src = '';
+  videoModal.style.display = 'none';
+};
+
+// Re-render when location changes
+locationFilter.addEventListener('change', renderIndexProperties);
+
+// Initial load
+renderIndexProperties();
+
+const body = document.body;
+const loadingScreen = document.getElementById('loadingScreen');
+const progressText = document.getElementById('progressText');
+const loadingTextElement = document.querySelector('.loading-text');
+body.classList.add('no-scroll');
+
+const loadingMessages = [
+  "Initializing RentHub...",
+  "Loading property database...",
+  "Connecting to servers...",
+  "Preparing your experience...",
+  "We are happy to be with you right now",
+  "Almost ready..."
+];
+
+let progress = 0;
+let messageIndex = 0;
+
+const interval = setInterval(() => {
+  progress += 2;
+  if (progressText) progressText.textContent = progress + "%";
+  if (progress % 20 === 0 && messageIndex < loadingMessages.length - 1) {
+    messageIndex++;
+    if (loadingTextElement) loadingTextElement.textContent = loadingMessages[messageIndex];
+  }
+  if (progress >= 100) {
+    clearInterval(interval);
+    if (loadingScreen) {
+      loadingScreen.classList.add('fade-out');
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        body.classList.remove('no-scroll');
+      }, 500);
+    }
+  }
+}, 100);
+
+ function showSection(sectionId, event) {
+  if (event) event.preventDefault();
+  document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+  const section = document.getElementById(sectionId);
+  if (section) section.classList.add('active');
+}
+</script>
+
+
+</body>
+</html>
+
+
+
