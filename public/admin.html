@@ -832,14 +832,7 @@
   </div>
 
 <script>
-  function showSection(sectionId, event) {
-  if (event) event.preventDefault();
-  document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-  const section = document.getElementById(sectionId);
-  if (section) section.classList.add('active');
-}
-
-const API_BASE = "https://renthouse-qs9j.onrender.com"; 
+const API_BASE = "https://renthouse-qs9j.onrender.com"; // Backend URL
 
 /* ---------- DOM Refs ---------- */
 const addHouseForm = document.getElementById('addHouseForm');
@@ -858,292 +851,179 @@ const usersTableBody = document.getElementById('usersTableBody');
 const toast = document.getElementById('toast');
 
 /* ---------- Utilities ---------- */
-function showToast(msg, type = 'info', t = 3000) {
-  toast.textContent = msg;
-  toast.className = `toast show ${type}`;
-  setTimeout(()=> { toast.className = 'toast'; }, t);
+function showToast(msg, type='info', t=3000){
+    toast.textContent = msg;
+    toast.className = `toast show ${type}`;
+    setTimeout(() => toast.className='toast', t);
 }
-function escapeHtml(text){
-  if(!text) return '';
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function numberWithCommas(x){ if(x === null || x === undefined) return ''; return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-function truncate(s, n=120){ return s && s.length>n ? s.slice(0,n-1)+'...' : (s||''); }
+function escapeHtml(text){ if(!text) return ''; return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function numberWithCommas(x){ if(x==null) return ''; return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+function truncate(s,n=120){ return s && s.length>n ? s.slice(0,n-1)+'...' : (s||''); }
 
 /* ---------- Preview Handlers ---------- */
-imageInput.addEventListener('change', (e) => {
-  const file = e.target.files?.[0];
-  if(!file) { resetImagePreview(); return; }
-  imageFileName.textContent = file.name;
-  const url = URL.createObjectURL(file);
-  imagePreview.src = url;
-  imagePreview.style.display = 'block';
-  noImagePreview.style.display = 'none';
+imageInput.addEventListener('change', (e)=>{
+    const file = e.target.files?.[0];
+    if(!file){ resetImagePreview(); return; }
+    imageFileName.textContent = file.name;
+    const url = URL.createObjectURL(file);
+    imagePreview.src = url;
+    imagePreview.style.display='block';
+    noImagePreview.style.display='none';
+});
+videoInput.addEventListener('change', (e)=>{
+    const file = e.target.files?.[0];
+    if(!file){ resetVideoPreview(); return; }
+    videoFileName.textContent = file.name;
+    const url = URL.createObjectURL(file);
+    videoPreview.src = url;
+    videoPreview.style.display='block';
+    noVideoPreview.style.display='none';
+});
+function resetImagePreview(){ imageFileName.textContent='No image selected'; imagePreview.style.display='none'; noImagePreview.style.display='block'; imagePreview.src=''; }
+function resetVideoPreview(){ videoFileName.textContent='No video selected'; videoPreview.style.display='none'; noVideoPreview.style.display='block'; videoPreview.src=''; }
+
+/* ---------- Add House ---------- */
+addHouseForm.addEventListener('submit', async e=>{
+    e.preventDefault();
+    submitBtn.disabled=true; submitBtn.textContent='Adding...';
+    try {
+        const fd = new FormData();
+        fd.append('title', document.getElementById('houseTitle').value.trim());
+        fd.append('price', document.getElementById('housePrice').value);
+        fd.append('location', document.getElementById('houseLocation').value.trim());
+        fd.append('owner', document.getElementById('houseOwner').value.trim());
+        fd.append('description', document.getElementById('houseDescription').value.trim());
+        fd.append('phone', document.getElementById('housePhone').value.trim());
+        if(imageInput.files[0]) fd.append('image', imageInput.files[0]);
+        if(videoInput.files[0]) fd.append('video', videoInput.files[0]);
+
+        const res = await fetch(`${API_BASE}/api/houses`, { method:'POST', body: fd });
+        console.log('POST /api/houses response status:', res.status);
+        const data = await res.json();
+        console.log('POST response:', data);
+
+        if(!res.ok) throw new Error(data.error || data.message || 'Failed to add');
+
+        showToast('Property added successfully!', 'success');
+        addHouseForm.reset(); resetImagePreview(); resetVideoPreview();
+        await renderProperties();
+    } catch(err){
+        console.error('Add house error:', err);
+        showToast('Error: '+(err.message||'Failed'), 'error', 5000);
+    } finally { submitBtn.disabled=false; submitBtn.textContent='Add House'; }
 });
 
-videoInput.addEventListener('change', (e) => {
-  const file = e.target.files?.[0];
-  if(!file) { resetVideoPreview(); return; }
-  videoFileName.textContent = file.name;
-  const url = URL.createObjectURL(file);
-  videoPreview.src = url;
-  videoPreview.style.display = 'block';
-  noVideoPreview.style.display = 'none';
-});
-
-function resetImagePreview(){
-  imageFileName.textContent = 'No image selected';
-  imagePreview.style.display = 'none';
-  noImagePreview.style.display = 'block';
-  imagePreview.src = '';
-}
-function resetVideoPreview(){
-  videoFileName.textContent = 'No video selected';
-  videoPreview.style.display = 'none';
-  noVideoPreview.style.display = 'block';
-  videoPreview.src = '';
-}
-
-/* ---------- Add House (upload via backend) ---------- */
-addHouseForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Adding...';
-
-  try {
-    const title = document.getElementById('houseTitle').value.trim();
-    const price = document.getElementById('housePrice').value;
-    const location = document.getElementById('houseLocation').value.trim();
-    const owner = document.getElementById('houseOwner').value.trim();
-    const description = document.getElementById('houseDescription').value.trim();
-    const phone = document.getElementById('housePhone').value.trim();
-
-    const fd = new FormData();
-    fd.append('title', title);
-    fd.append('price', price);
-    fd.append('location', location);
-    fd.append('owner', owner);
-    fd.append('description', description);
-    fd.append('phone', phone);
-
-    if (imageInput.files && imageInput.files[0]) fd.append('image', imageInput.files[0]);
-    if (videoInput.files && videoInput.files[0]) fd.append('video', videoInput.files[0]);
-
-    const res = await fetch(`${API_BASE}/api/houses`, { method: 'POST', body: fd });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to add');
-
-    showToast('Property added', 'success');
-    addHouseForm.reset();
-    resetImagePreview(); resetVideoPreview();
-    await renderProperties();
-  } catch (err) {
-    console.error(err);
-    showToast('Error: ' + (err.message || 'failed'), 'error', 5000);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Add House';
-  }
-});
-
-/* ---------- Render Properties (Admin Manage) ---------- */
+/* ---------- Render Properties ---------- */
 async function renderProperties(){
-  allPropertiesContainer.innerHTML = '<p>Loading properties...</p>';
-  try {
-    const res = await fetch(`${API_BASE}/api/houses`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load');
+    allPropertiesContainer.innerHTML='<p>Loading properties...</p>';
+    try{
+        const res = await fetch(`${API_BASE}/api/houses`);
+        console.log('GET /api/houses status:', res.status);
+        const data = await res.json();
+        console.log('Fetched properties:', data);
 
-    if (!data || data.length === 0) {
-      allPropertiesContainer.innerHTML = '<p>No properties found.</p>';
-      return;
+        if(!res.ok) throw new Error(data.error || data.message || 'Failed to load');
+
+        if(!data || data.length===0){ allPropertiesContainer.innerHTML='<p>No properties found.</p>'; return; }
+
+        allPropertiesContainer.innerHTML='';
+        data.forEach(prop=>{
+            const card=document.createElement('div'); card.className='property-card';
+            const imageHtml=prop.image_url ? `<img src="${prop.image_url}" alt="${escapeHtml(prop.title)}" class="property-image">` : '';
+            card.innerHTML=`
+                ${imageHtml}
+                <div class="property-details">
+                    <h3>${escapeHtml(prop.title)}</h3>
+                    <div class="property-location">${escapeHtml(prop.location||'')}</div>
+                    <div class="property-price">RWF ${numberWithCommas(prop.price)}</div>
+                    <div class="property-description">${escapeHtml(truncate(prop.description||'',120))}</div>
+                    <div class="property-owner">Owner: ${escapeHtml(prop.owner||'')} • ${escapeHtml(prop.phone||'')}</div>
+                    <div class="property-actions">
+                        <button class="edit-btn" data-id="${prop.id}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" data-id="${prop.id}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            `;
+            card.querySelector('.delete-btn').addEventListener('click',()=>handleDelete(prop.id));
+            card.querySelector('.edit-btn').addEventListener('click',()=>openEditModal(prop));
+            allPropertiesContainer.appendChild(card);
+        });
+    }catch(err){
+        console.error('Render properties error:', err);
+        allPropertiesContainer.innerHTML='<p>Error loading properties.</p>';
+        showToast('Failed to load properties', 'error', 5000);
     }
-
-    allPropertiesContainer.innerHTML = '';
-    data.forEach(prop => {
-      const card = document.createElement('div');
-      card.className = 'property-card';
-      const imageHtml = prop.image_url ? `<img src="${prop.image_url}" alt="${escapeHtml(prop.title)}" class="property-image">` : '';
-      card.innerHTML = `
-        ${imageHtml}
-        <div class="property-details">
-          <h3>${escapeHtml(prop.title)}</h3>
-          <div class="property-location">${escapeHtml(prop.location || '')}</div>
-          <div class="property-price">RWF ${numberWithCommas(prop.price)}</div>
-          <div class="property-description">${escapeHtml(truncate(prop.description||'',120))}</div>
-          <div class="property-owner">Owner: ${escapeHtml(prop.owner || '')} • ${escapeHtml(prop.phone || '')}</div>
-          <div class="property-actions">
-            <button class="edit-btn" data-id="${prop.id}"><i class="fas fa-edit"></i> Edit</button>
-            <button class="delete-btn" data-id="${prop.id}"><i class="fas fa-trash"></i> Delete</button>
-          </div>
-        </div>
-      `;
-
-      // attach handlers
-      card.querySelector('.delete-btn').addEventListener('click', () => handleDelete(prop.id));
-      card.querySelector('.edit-btn').addEventListener('click', () => openEditModal(prop));
-      allPropertiesContainer.appendChild(card);
-    });
-  } catch (err) {
-    console.error(err);
-    allPropertiesContainer.innerHTML = '<p>Error loading properties.</p>';
-  }
 }
 
 /* ---------- Delete ---------- */
-async function handleDelete(id) {
-  if (!confirm('Delete this property? This will remove media too.')) return;
-  try {
-    const res = await fetch(`${API_BASE}/api/houses/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to delete');
-    showToast('Deleted', 'success');
-    renderProperties();
-    renderSelectedProperties();
-  } catch (err) {
-    console.error(err);
-    showToast('Delete failed: ' + (err.message || ''), 'error', 5000);
-  }
-}
-
-/* ---------- Edit Modal (quick prompt-based editing + optional media replacement) ---------- */
-function openEditModal(prop) {
-  // Create a small modal using browser prompt sequence (for simplicity)
-  // For production replace with a proper modal form
-  const newTitle = prompt('Title', prop.title);
-  if (newTitle === null) return;
-  const newPrice = prompt('Price', prop.price);
-  if (newPrice === null) return;
-  const newDesc = prompt('Description', prop.description || '');
-  if (newDesc === null) return;
-
-  // Optionally ask to replace image/video using small file input popup
-  // We'll build a hidden form for file selection
-  const replace = confirm('Do you want to replace image / video for this property? Click OK to choose files (optional).');
-  if (!replace) {
-    // Send update without media
-    updateProperty(prop.id, { title: newTitle, price: newPrice, description: newDesc });
-    return;
-  }
-
-  // Create an invisible form to pick files
-  const container = document.createElement('div');
-  container.style.display = 'none';
-  container.innerHTML = `
-    <input type="file" id="tmp_image" accept="image/*">
-    <input type="file" id="tmp_video" accept="video/*">
-  `;
-  document.body.appendChild(container);
-
-  const imgInput = container.querySelector('#tmp_image');
-  const vidInput = container.querySelector('#tmp_video');
-
-  imgInput.onchange = async () => {
-    // proceed after selecting files (or none)
-    const fd = new FormData();
-    fd.append('title', newTitle);
-    fd.append('price', newPrice);
-    fd.append('description', newDesc);
-    // append files if chosen
-    if (imgInput.files[0]) fd.append('image', imgInput.files[0]);
-    if (vidInput.files[0]) fd.append('video', vidInput.files[0]);
-
-    try {
-      const res = await fetch(`${API_BASE}/api/houses/${prop.id}`, { method: 'PUT', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update');
-      showToast('Updated', 'success');
-      renderProperties();
-    } catch (err) {
-      console.error(err);
-      showToast('Update failed: ' + (err.message || ''), 'error', 5000);
-    } finally {
-      document.body.removeChild(container);
+async function handleDelete(id){
+    if(!confirm('Delete this property? This will remove media too.')) return;
+    try{
+        const res=await fetch(`${API_BASE}/api/houses/${id}`,{method:'DELETE'});
+        const data=await res.json();
+        console.log('DELETE /api/houses/'+id, res.status, data);
+        if(!res.ok) throw new Error(data.error||data.message||'Failed to delete');
+        showToast('Deleted successfully', 'success');
+        renderProperties(); renderSelectedProperties();
+    }catch(err){
+        console.error('Delete error:', err);
+        showToast('Delete failed: '+(err.message||''),'error',5000);
     }
-  };
-
-  // click image input to open dialog (user can cancel and select none)
-  imgInput.click();
-
-  // fallback: If user wants to only select video, they can use video input directly as well
-  vidInput.onclick = () => {}; // no-op
 }
 
-/* ---------- Update property without new media ---------- */
-async function updateProperty(id, payload) {
-  try {
-    const res = await fetch(`${API_BASE}/api/houses/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to update');
-    showToast('Property updated', 'success');
-    renderProperties();
-  } catch (err) {
-    console.error(err);
-    showToast('Update error: ' + (err.message || ''), 'error', 5000);
-  }
-}
-
-/* ---------- Selected Houses (Admin view) ---------- */
-async function renderSelectedProperties() {
-  selectedPropertiesContainer.innerHTML = '<p>Loading selected houses...</p>';
-  try {
-    const res = await fetch(`${API_BASE}/api/selected-houses`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load selections');
-
-    if (!data || data.length === 0) {
-      selectedPropertiesContainer.innerHTML = '<p>No selections yet.</p>';
-      return;
+/* ---------- Users ---------- */
+async function renderUsers(){
+    usersTableBody.innerHTML='<tr><td colspan="2">Loading users...</td></tr>';
+    try{
+        const res=await fetch(`${API_BASE}/api/users`);
+        const data=await res.json();
+        console.log('Fetched users:', data);
+        if(!res.ok) throw new Error(data.error||data.message||'Failed');
+        if(!data || data.length===0){ usersTableBody.innerHTML='<tr><td colspan="2">No users yet</td></tr>'; return; }
+        usersTableBody.innerHTML='';
+        data.forEach(u=>{
+            const tr=document.createElement('tr');
+            tr.innerHTML=`<td>${escapeHtml(u.full_name||'-')}</td><td>${escapeHtml(u.phone||'-')}</td>`;
+            usersTableBody.appendChild(tr);
+        });
+    }catch(err){
+        console.error('Users fetch error:', err);
+        usersTableBody.innerHTML='<tr><td colspan="2">Error loading users</td></tr>';
+        showToast('Failed to load users','error',5000);
     }
-
-    selectedPropertiesContainer.innerHTML = '';
-    data.forEach(row => {
-      const p = row.properties || row.property || {};
-      const div = document.createElement('div');
-      div.className = 'property-card';
-      const img = p.image_url ? `<img src="${p.image_url}" class="property-image">` : '';
-      div.innerHTML = `
-        ${img}
-        <div class="property-details">
-          <h3>${escapeHtml(p.title || 'Property')}</h3>
-          <div class="property-location">${escapeHtml(p.location || '')}</div>
-          <div class="property-price">RWF ${numberWithCommas(p.price || '')}</div>
-          <div class="property-owner">Selected by: ${escapeHtml(row.user_id || 'guest')}</div>
-        </div>
-      `;
-      selectedPropertiesContainer.appendChild(div);
-    });
-  } catch (err) {
-    console.error(err);
-    selectedPropertiesContainer.innerHTML = '<p>Error loading selections.</p>';
-  }
 }
 
-/* ---------- Users list ---------- */
-async function renderUsers() {
-  usersTableBody.innerHTML = '<tr><td colspan="2">Loading users...</td></tr>';
-  try {
-    const res = await fetch(`${API_BASE}/api/users`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load users');
-    if (!data || data.length === 0) {
-      usersTableBody.innerHTML = '<tr><td colspan="2">No users yet</td></tr>';
-      return;
+/* ---------- Selected Houses ---------- */
+async function renderSelectedProperties(){
+    selectedPropertiesContainer.innerHTML='<p>Loading selected houses...</p>';
+    try{
+        const res=await fetch(`${API_BASE}/api/selected-houses`);
+        const data=await res.json();
+        console.log('Fetched selected houses:', data);
+        if(!res.ok) throw new Error(data.error||data.message||'Failed');
+        if(!data || data.length===0){ selectedPropertiesContainer.innerHTML='<p>No selections yet.</p>'; return; }
+
+        selectedPropertiesContainer.innerHTML='';
+        data.forEach(row=>{
+            const p=row.properties||row.property||{};
+            const div=document.createElement('div'); div.className='property-card';
+            const img=p.image_url ? `<img src="${p.image_url}" class="property-image">` : '';
+            div.innerHTML=`
+                ${img}
+                <div class="property-details">
+                    <h3>${escapeHtml(p.title||'Property')}</h3>
+                    <div class="property-location">${escapeHtml(p.location||'')}</div>
+                    <div class="property-price">RWF ${numberWithCommas(p.price||'')}</div>
+                    <div class="property-owner">Selected by: ${escapeHtml(row.user_id||'guest')}</div>
+                </div>
+            `;
+            selectedPropertiesContainer.appendChild(div);
+        });
+    }catch(err){
+        console.error('Selected properties error:', err);
+        selectedPropertiesContainer.innerHTML='<p>Error loading selections.</p>';
+        showToast('Failed to load selected houses','error',5000);
     }
-    usersTableBody.innerHTML = '';
-    data.forEach(u => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${escapeHtml(u.full_name || '-')}</td><td>${escapeHtml(u.phone || '-')}</td>`;
-      usersTableBody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error(err);
-    usersTableBody.innerHTML = '<tr><td colspan="2">Error loading users</td></tr>';
-  }
 }
 
 /* ---------- Init ---------- */
@@ -1151,5 +1031,6 @@ renderProperties();
 renderSelectedProperties();
 renderUsers();
 </script>
+
 </body>
 </html>
