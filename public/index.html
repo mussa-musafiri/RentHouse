@@ -378,7 +378,120 @@ footer {
         <p>&copy; 2025 Online RentHub House Property. All rights reserved.</p>
     </footer>
     </div>
-<script >
+    <script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Supabase public anon key and URL
+const SUPABASE_URL = 'https://wnxhkgfgllgnegsataml.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndueGhrZ2ZnbGxnbmVnc2F0YW1sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE2ODYzOSwiZXhwIjoyMDczNzQ0NjM5fQ.bAqRDpDvS43ceYM04iKZT3BYkdtipnPwSAKJVqif0-8';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const propertiesContainer = document.getElementById('propertiesContainer');
+const locationFilter = document.getElementById('location-filter');
+
+// Track current user (for demo, use random id or integrate auth later)
+const CURRENT_USER_ID = Math.floor(Math.random() * 1000000);
+
+async function renderIndexProperties() {
+  const location = locationFilter.value;
+  let query = supabase.from('properties')
+    .select(`
+      *,
+      selected_properties:user_id
+    `)
+    .order('created_at', { ascending: false });
+
+  const { data: properties, error } = await query;
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  propertiesContainer.innerHTML = '';
+
+  properties.forEach(prop => {
+    // Check if property is already selected
+    const isSelected = prop.selected_properties?.length > 0;
+
+    const propCard = document.createElement('div');
+    propCard.className = 'property-card';
+
+    const imageUrl = prop.image_url || 'media/default.jpg';
+    const videoUrl = prop.video_url;
+
+    propCard.innerHTML = `
+      <div class="property-media-wrapper">
+        <img src="${imageUrl}" alt="${prop.title}" class="property-image">
+        ${videoUrl ? `<div class="play-video-overlay" onclick="playVideo('${videoUrl}')"><i class="fas fa-play"></i></div>` : ''}
+        ${isSelected ? '<div class="selected-overlay">Selected</div>' : ''}
+      </div>
+      <div class="property-details">
+        <h3>${prop.title}</h3>
+        <p>${prop.description}</p>
+        <p><strong>Location:</strong> ${prop.location}</p>
+        <p><strong>Price:</strong> $${prop.price}</p>
+        <p><strong>Owner:</strong> ${prop.owner}</p>
+        <p><strong>Phone:</strong> <a class="tel" href="tel:${prop.phone}">${prop.phone}</a></p>
+        <button class="select-btn" ${isSelected ? 'disabled' : ''} onclick="selectHouse(${prop.id}, this)">
+          ${isSelected ? 'Selected' : 'Select House'}
+        </button>
+      </div>
+    `;
+
+    propertiesContainer.appendChild(propCard);
+  });
+}
+
+// Handle selecting a house
+async function selectHouse(propertyId, btn) {
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Selected';
+
+    const { data, error } = await supabase.from('selected_properties').insert([{
+      user_id: CURRENT_USER_ID,
+      property_id: propertyId
+    }]).select();
+
+    if (error) {
+      console.error(error);
+      alert('Failed to select property: ' + error.message);
+      btn.disabled = false;
+      btn.textContent = 'Select House';
+      return;
+    }
+
+    // Refresh properties so others will see it as selected
+    renderIndexProperties();
+  } catch (err) {
+    console.error(err);
+    alert('Error: ' + err.message);
+  }
+}
+
+// Play video modal
+const videoModal = document.getElementById('videoModal');
+const modalVideo = document.getElementById('modalVideo');
+const closeBtn = videoModal.querySelector('.close-btn');
+
+window.playVideo = function(url) {
+  modalVideo.src = url;
+  videoModal.style.display = 'flex';
+  modalVideo.play();
+};
+
+closeBtn.onclick = () => {
+  modalVideo.pause();
+  modalVideo.src = '';
+  videoModal.style.display = 'none';
+};
+
+// Re-render when location changes
+locationFilter.addEventListener('change', renderIndexProperties);
+
+// Initial load
+renderIndexProperties();
+
 const body = document.body;
 const loadingScreen = document.getElementById('loadingScreen');
 const progressText = document.getElementById('progressText');
