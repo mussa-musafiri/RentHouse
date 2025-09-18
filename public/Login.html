@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Online House_Rent Solution</title>
+  <link rel="stylesheet" href="Css/style.css" />
+  <script src="JavaScript/admin.js"></script>
+  <link rel="stylesheet" href="font-awasome/css/all.min.css" />
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="logo">
+                <i class="fas fa-home"></i>
+                <h1>RentHub</h1>
+            </div>
+            
+            <div class="tagline">
+                <p>Find your perfect home with ease. Connect with trusted landlords and discover amazing rental properties in your area.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-search"></i>
+                    <span>Smart Property Search</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Verified Listings</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-handshake"></i>
+                    <span>Direct Owner Contact</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile Friendly</span>
+                </div>
+            </div>
+
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-whatsapp"></i></a>
+                <a href="#"><i class="fab fa-telegram"></i></a>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-container">
+                <div id="successMessage" class="success-message"></div>
+                <div id="errorMessage" class="error-message"></div>
+
+                <!-- Register Form -->
+                <div class="form" id="registerForm">
+                    <div class="form-header">
+                        <h2>Create Account</h2>
+                        <p>Join RentHub and start your journey</p>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="regUsername" required>
+                        <label>Username</label>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="regPhone" required>
+                        <label>Phone Number</label>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regPassword" required>
+                        <label>Create Password</label>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regConfirm" required>
+                        <label>Confirm Password</label>
+                    </div>
+
+                    <button class="submit-btn" id="registerBtn">Create Account</button>
+
+                    <div class="form-toggle">
+                        Already have an account? <a href="#" class="login-link">Sign In</a>
+                    </div>
+                </div>
+
+                <!-- Login Form -->
+                <div class="form hidden" id="loginForm">
+                    <div class="form-header">
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to your RentHub account</p>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" required>
+                        <label>Username</label>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" required>
+                        <label>Password</label>
+                    </div>
+
+                    <button class="submit-btn" id="loginBtn">Sign In</button>
+
+                    <div class="form-toggle">
+                        Don't have an account? <a href="#" class="register-link">Create Account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+    const registerBtn = document.getElementById('registerBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showMessage(message, isSuccess = true) {
+            const messageEl = isSuccess ? successMessage : errorMessage;
+            messageEl.textContent = message;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+
+        function clearMessages() {
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+        }
+
+        // Register functionality
+        registerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            const username = document.getElementById('regUsername').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+
+            if (!username || !phone || !password || !confirm) {
+                showMessage('Please fill all fields!', false);
+                return;
+            }
+
+            if (password !== confirm) {
+                showMessage('Passwords do not match!', false);
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters!', false);
+                return;
+            }
+
+            if (users.find(u => u.username === username)) {
+                showMessage('Username already exists!', false);
+                return;
+            }
+
+            const newUser = { username, phone, password };
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            showMessage('Account created successfully! Please sign in.');
+          
+            
+            // Clear form
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirm').value = '';
+            
+            // Switch to login form
+            setTimeout(() => {
+                toggleForms();
+            }, 1500);
+        });
+
+        // Login functionality
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showMessage('Please fill all fields!', false);
+                return;
+            }
+
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('loggedInUser', JSON.stringify(user));
+                showMessage(`Welcome back, ${user.username}!`);
+                
+                // Simulate redirect to dashboard
+                setTimeout(() => {
+                    showMessage('Redirecting to dashboard...', true);
+                    window.location.href = "index.html";
+                    // In a real app, you would redirect here
+                    // window.location.href = "dashboard.html";
+                }, 1500);
+            } else {
+                showMessage('Invalid username or password!', false);
+            }
+        });
+
+        // Form toggle functionality
+        function toggleForms() {
+            const registerForm = document.getElementById('registerForm');
+            const loginForm = document.getElementById('loginForm');
+            
+            registerForm.classList.toggle('hidden');
+            loginForm.classList.toggle('hidden');
+            clearMessages();
+        }
+
+        document.querySelector('.login-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms();
+        });
+
+        document.querySelector('.register-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms();
+        });
+
+        // Add smooth input animations
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        const username = document.getElementById("loginUsername").value;
+const phone = document.getElementById("loginPhone").value;
+
+const user = {
+  username: username,
+  phone: phone
+};
+
+// Helper: update activeUsers list in localStorage
+function setUserActive(user) {
+  let activeUsers = JSON.parse(localStorage.getItem('activeUsers')) || [];
+  const index = activeUsers.findIndex(u => u.username === user.username);
+  if (index !== -1) {
+    activeUsers[index].status = 'active';
+    activeUsers[index].lastActive = new Date().toISOString();
+  } else {
+    activeUsers.push({
+      username: user.username,
+      phone: user.phone,
+      status: 'active',
+      lastActive: new Date().toISOString()
+    });
+  }
+  localStorage.setItem('activeUsers', JSON.stringify(activeUsers));
+}
+
+// Helper: remove user from activeUsers on logout
+function removeUserActive(username) {
+  let activeUsers = JSON.parse(localStorage.getItem('activeUsers')) || [];
+  activeUsers = activeUsers.filter(u => u.username !== username);
+  localStorage.setItem('activeUsers', JSON.stringify(activeUsers));
+}
+
+// Enhance loginBtn listener to set user active and update localStorage
+loginBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  clearMessages();
+
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!username || !password) {
+    showMessage('Please fill all fields!', false);
+    return;
+  }
+
+  const user = users.find(u => u.username === username && u.password === password);
+  if (user) {
+    currentUser = user;
+    localStorage.setItem('loggedInUser', JSON.stringify(user));
+    setUserActive(user);  // Set user as active here
+    showMessage(`Welcome back, ${user.username}!`);
+
+    setTimeout(() => {
+      window.location.href = "index.html"; // Or dashboard page
+    }, 1500);
+  } else {
+    showMessage('Invalid username or password!', false);
+  }
+});
+
+// Add logout function (you'll need a logout button in your dashboard or wherever)
+function logout() {
+  if (!currentUser) return;
+  removeUserActive(currentUser.username);
+  currentUser = null;
+  localStorage.removeItem('loggedInUser');
+  showMessage('Logged out successfully.');
+  // Optionally redirect to login page or refresh UI
+  window.location.href = "login.html"; // Adjust as needed
+}
+
+// Storage event listener to sync active users and login across tabs/windows of SAME browser
+window.addEventListener('storage', (event) => {
+  if (event.key === 'loggedInUser' || event.key === 'activeUsers') {
+    // Update currentUser from localStorage
+    currentUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    // You can update UI accordingly here
+    // For example, reload page or update login/logout buttons
+  }
+});
+
+</script>
+</body>
+</html>
