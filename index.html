@@ -8,6 +8,8 @@
     <link rel="shortcut icon" href="media/logo2.jpg" type="image/*">
     <link rel="stylesheet" href="font-awasome/css/all.min.css">   
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" /> 
+    <script type="module" src="https://renthouse-qs9j.onrender.com"></script>
+
 
 <style>
     .image-wrapper {
@@ -398,15 +400,16 @@ footer {
         <div class="sidebar-header"></div>
         <div class="logos"></div>
         <div class="user-profile" id="userProfile" style="display: none;">
-            <div class="profile-avatar">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-            </div>
-            <br>
-            <div class="profile-name" id="userName"></div><br>
-            <div class="profile-status">Online</div>
-        </div>
+    <div class="profile-avatar">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+    </div>
+    <br>
+    <div class="profile-name" id="userName"></div><br>
+    <div class="profile-status">Online</div>
+</div>
+
         
         <ul class="menu">
             <li>
@@ -560,15 +563,13 @@ footer {
     </div>
     <script type="module">
 // main.js
-
-// main.js
-
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // --- Supabase Setup ---
 const SUPABASE_URL = 'https://wnxhkgfgllgnegsataml.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndueGhrZ2ZnbGxnbmVnc2F0YW1sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE2ODYzOSwiZXhwIjoyMDczNzQ0NjM5fQ.bAqRDpDvS43ceYM04iKZT3BYkdtipnPwSAKJVqif0-8';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 // --- DOM Elements ---
 const propertiesContainer = document.getElementById('propertiesContainer');
@@ -583,16 +584,68 @@ const loadingScreen = document.getElementById('loadingScreen');
 const progressText = document.getElementById('progressText');
 const loadingTextElement = document.querySelector('.loading-text');
 
-// --- Simulated Current User ---
-const CURRENT_USER_ID = Math.floor(Math.random() * 1000000);
+// --- Global variable for current user ---
+let CURRENT_USER = null;
+const userNameDiv = document.getElementById('userName');
+const profileAvatarDiv = document.querySelector('.profile-avatar');
+const userProfileDiv = document.getElementById('userProfile');
+const signUpMenu = document.getElementById('signUpMenu');
+const logoutMenu = document.getElementById('logoutMenu');
 
-// --- Function to Load Properties ---
-// --- Load Properties ---
+const loggedInUserId = localStorage.getItem('loggedInUserId');
+// --- Load current user profile ---
+async function loadCurrentUserProfile() {
+    const username = localStorage.getItem("loggedInUsername");
+    if (!username) return; // user not logged in
+
+    try {
+        const { data: userData, error } = await supabase
+            .from('site_user')
+            .select('*')
+            .eq('username', username)
+            .single();
+
+        if (error) {
+            console.error("Error fetching user profile:", error.message);
+            return;
+        }
+
+        if (userData) {
+            // Display user's name
+            userNameDiv.textContent = userData.full_name || userData.username;
+
+            // Display user's avatar if exists in Supabase storage
+            if (userData.avatar_path) {
+                const { data: avatarData, error: avatarError } = supabase
+                    .storage
+                    .from('avatars')
+                    .getPublicUrl(userData.avatar_path);
+
+                if (!avatarError && avatarData?.publicUrl) {
+                    profileAvatarDiv.innerHTML = `<img src="${avatarData.publicUrl}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;">`;
+                }
+            }
+
+            // Show profile and logout, hide Sign-Up
+            userProfileDiv.style.display = 'block';
+            signUpMenu.style.display = 'none';
+            logoutMenu.style.display = 'block';
+        }
+    } catch (err) {
+        console.error("Failed to load user profile:", err.message);
+    }
+}
+// --- Logout Function ---
+document.getElementById('Logouts').addEventListener('click', () => {
+    localStorage.removeItem('loggedInUsername');
+    window.location.href = 'Login.html';
+});
+
+// --- Render Properties ---
 async function renderIndexProperties() {
     const location = locationFilter.value;
 
     try {
-        // Fetch properties from Supabase
         let query = supabase.from('properties').select('*').order('created_at', { ascending: false });
         if (location && location !== 'All') query = query.eq('location', location);
 
@@ -602,23 +655,18 @@ async function renderIndexProperties() {
         propertiesContainer.innerHTML = '';
 
         properties.forEach(prop => {
-            const isSelected = prop.selected_users?.includes(CURRENT_USER_ID);
+            const isSelected = prop.selected_users?.includes(CURRENT_USER?.id) || false;
             const propCard = document.createElement('div');
             propCard.className = 'property-card';
 
-            // Get image & video URLs from Supabase storage or fallback
-            const imageUrl = prop.image_path 
-                ? supabase.storage.from('property-media').getPublicUrl(prop.image_path).data.publicUrl 
+            const imageUrl = prop.image_path
+                ? supabase.storage.from('property-media').getPublicUrl(prop.image_path).data.publicUrl
                 : 'https://via.placeholder.com/360x240';
-            const videoUrl = prop.video_path 
-                ? supabase.storage.from('property-media').getPublicUrl(prop.video_path).data.publicUrl 
+
+            const videoUrl = prop.video_path
+                ? supabase.storage.from('property-media').getPublicUrl(prop.video_path).data.publicUrl
                 : null;
 
-            // Prefetch image for smoother display
-            const img = new Image();
-            img.src = imageUrl;
-
-            // HTML structure
             propCard.innerHTML = `
                 <div class="property-media-wrapper">
                     <img src="${imageUrl}" alt="${prop.title}" class="property-image">
@@ -637,7 +685,6 @@ async function renderIndexProperties() {
                     </button>
                 </div>
             `;
-
             propertiesContainer.appendChild(propCard);
         });
     } catch (err) {
@@ -645,21 +692,48 @@ async function renderIndexProperties() {
     }
 }
 
-// --- Play Video Function ---
+// --- Select House Function ---
+window.selectHouse = async function(propertyId, btn) {
+    if (!CURRENT_USER) {
+        alert('Please login first.');
+        return;
+    }
+
+    try {
+        // Update property selection in Supabase
+        const { data, error } = await supabase.from('properties').update({
+            selected_users: supabase.raw('array_append(selected_users, ?)', [CURRENT_USER.id])
+        }).eq('id', propertyId);
+
+        if (error) {
+            console.error(error);
+            alert('Error selecting property.');
+            return;
+        }
+
+        btn.textContent = 'Selected';
+        btn.disabled = true;
+        btn.classList.add('selected');
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+// --- Play Video ---
 window.playVideo = function(url) {
     modalVideo.src = url;
     videoModal.style.display = 'flex';
     modalVideo.play();
 };
 
-// --- Close video modal ---
+// --- Close Video Modal ---
 closeBtn.onclick = () => {
     modalVideo.pause();
     modalVideo.src = '';
     videoModal.style.display = 'none';
 };
 
-// --- Location Filter ---
+// --- Filter by location ---
 locationFilter.addEventListener('change', renderIndexProperties);
 
 // --- Loading Screen Simulation ---
@@ -675,7 +749,6 @@ const loadingMessages = [
 
 let progress = 0;
 let messageIndex = 0;
-
 const interval = setInterval(async () => {
     progress += 2;
     if (progressText) progressText.textContent = progress + "%";
@@ -688,7 +761,10 @@ const interval = setInterval(async () => {
     if (progress >= 100) {
         clearInterval(interval);
 
-        // Load properties after the loading screen
+        // Load user profile
+        await loadCurrentUserProfile();
+
+        // Load properties
         await renderIndexProperties();
 
         if (loadingScreen) {
@@ -701,6 +777,22 @@ const interval = setInterval(async () => {
     }
 }, 100);
 
+// --- Section Toggle ---
+window.showSection = function(sectionId) {
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(sec => sec.classList.remove('active'));
+    const target = document.getElementById(sectionId);
+    if (target) target.classList.add('active');
+};
+
+// --- Highlight active menu item ---
+const menuLinks = document.querySelectorAll('.menu li a');
+menuLinks.forEach(link => {
+    link.addEventListener('click', function() {
+        menuLinks.forEach(l => l.classList.remove('active-link'));
+        this.classList.add('active-link');
+    });
+});
 
 </script>
 
