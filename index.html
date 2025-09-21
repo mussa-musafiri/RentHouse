@@ -15,11 +15,6 @@
     .image-wrapper {
   position: relative;
 }
-.tel{
-  text-decoration: none;
-  font-weight: bold;
-  color: #2c3e50;
-}
 body.no-scroll {
     overflow: hidden;
     pointer-events: none;
@@ -27,7 +22,7 @@ body.no-scroll {
 body.no-scroll .loading-screen {
     pointer-events: auto;
 }
-.selected-overlay {
+/* .selected-overlay {
   position: absolute;
   top: 10px;
   left: 10px;
@@ -39,7 +34,7 @@ body.no-scroll .loading-screen {
   font-size: 14px;
   z-index: 10;
   text-transform: uppercase;
-}
+} */
 footer { 
     text-align:center; 
     padding:20px; 
@@ -51,43 +46,7 @@ footer {
 .property-media-wrapper {
   position: relative;
 }
-.play-video-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 28px;
-  color: white;
-  background: rgba(0,0,0,0.5);
-  border-radius: 50%;
-  padding: 15px;
-  cursor: pointer;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease, background 0.3s ease;
-}
-.play-video-overlay:hover {
-  transform: translate(-50%, -50%) scale(1.2);
-  background: rgba(0,0,0,0.7);
-}
-/* Select button below description */
-.property-details .select-btn {
-  margin-top: 10px;
-  padding: 13px 15px;
-  background-color: #f39c12;
-  border: none;
-  color: white;
-  font-weight: bold;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-.property-details .select-btn.selected {
-  background-color: #27ae60;
-  cursor: default;
-}
+/*  */
 /* Video Modal */
 #videoModal {
     display: none;
@@ -308,7 +267,7 @@ footer {
 }
 
 .property-details .tel {
-  color: #2980b9;
+  color: mediumseagreen;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.3s ease;
@@ -332,7 +291,7 @@ footer {
   font-size: 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-radius: 25px;
+  border-radius: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -562,14 +521,12 @@ footer {
     </footer>
     </div>
     <script type="module">
-// main.js
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 // --- Supabase Setup ---
 const SUPABASE_URL = 'https://wnxhkgfgllgnegsataml.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndueGhrZ2ZnbGxnbmVnc2F0YW1sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE2ODYzOSwiZXhwIjoyMDczNzQ0NjM5fQ.bAqRDpDvS43ceYM04iKZT3BYkdtipnPwSAKJVqif0-8';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 
 // --- DOM Elements ---
 const propertiesContainer = document.getElementById('propertiesContainer');
@@ -579,223 +536,199 @@ const modalVideo = document.getElementById('modalVideo');
 const closeBtn = videoModal.querySelector('.close-btn');
 const body = document.body;
 
-// --- Loading Screen Elements ---
+// --- Loading Screen ---
 const loadingScreen = document.getElementById('loadingScreen');
 const progressText = document.getElementById('progressText');
 const loadingTextElement = document.querySelector('.loading-text');
 
-// --- Global variable for current user ---
-let CURRENT_USER = null;
+// --- User UI Elements ---
 const userNameDiv = document.getElementById('userName');
-const profileAvatarDiv = document.querySelector('.profile-avatar');
 const userProfileDiv = document.getElementById('userProfile');
 const signUpMenu = document.getElementById('signUpMenu');
 const logoutMenu = document.getElementById('logoutMenu');
+const logoutBtn = document.getElementById('Logouts');
 
-const loggedInUserId = localStorage.getItem('loggedInUserId');
-// --- Load current user profile ---
-async function loadCurrentUserProfile() {
-    const username = localStorage.getItem("loggedInUsername");
-    if (!username) return; // user not logged in
+// --- Global User ---
+let CURRENT_USER = null;
 
-    try {
-        const { data: userData, error } = await supabase
-            .from('site_user')
-            .select('*')
-            .eq('username', username)
-            .single();
+// --- Check Login Status ---
+async function checkLoginStatus() {
+  const userId = localStorage.getItem("loggedInUserId");
+  if (!userId) {
+    CURRENT_USER = null;
+    userProfileDiv.style.display = 'none';
+    signUpMenu.style.display = 'block';
+    logoutMenu.style.display = 'none';
+    return;
+  }
 
-        if (error) {
-            console.error("Error fetching user profile:", error.message);
-            return;
-        }
+  try {
+    const { data: userData, error } = await supabase
+      .from('site_users')
+      .select('full_name')
+      .eq('id', userId)
+      .maybeSingle();
 
-        if (userData) {
-            // Display user's name
-            userNameDiv.textContent = userData.full_name || userData.username;
-
-            // Display user's avatar if exists in Supabase storage
-            if (userData.avatar_path) {
-                const { data: avatarData, error: avatarError } = supabase
-                    .storage
-                    .from('avatars')
-                    .getPublicUrl(userData.avatar_path);
-
-                if (!avatarError && avatarData?.publicUrl) {
-                    profileAvatarDiv.innerHTML = `<img src="${avatarData.publicUrl}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;">`;
-                }
-            }
-
-            // Show profile and logout, hide Sign-Up
-            userProfileDiv.style.display = 'block';
-            signUpMenu.style.display = 'none';
-            logoutMenu.style.display = 'block';
-        }
-    } catch (err) {
-        console.error("Failed to load user profile:", err.message);
+    if (error) {
+      console.error("Error fetching user:", error);
     }
+
+    CURRENT_USER = { id: userId, full_name: userData?.full_name || "User" };
+
+    userNameDiv.textContent = CURRENT_USER.full_name;
+    userProfileDiv.style.display = 'block';
+    signUpMenu.style.display = 'none';
+    logoutMenu.style.display = 'block';
+
+  } catch (err) {
+    console.error("Login status error:", err);
+  }
 }
-// --- Logout Function ---
-document.getElementById('Logouts').addEventListener('click', () => {
-    localStorage.removeItem('loggedInUsername');
-    window.location.href = 'Login.html';
+
+// --- Logout ---
+logoutBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  localStorage.removeItem('loggedInUserId');
+  CURRENT_USER = null;
+
+  userProfileDiv.style.display = 'none';
+  signUpMenu.style.display = 'block';
+  logoutMenu.style.display = 'none';
+
+  window.location.href = "Login.html";
 });
 
 // --- Render Properties ---
 async function renderIndexProperties() {
-    const location = locationFilter.value;
+  const location = locationFilter.value;
+  try {
+    let query = supabase.from('properties').select('*').order('created_at', { ascending: false });
+    if (location && location !== 'All') query = query.eq('location', location);
 
-    try {
-        let query = supabase.from('properties').select('*').order('created_at', { ascending: false });
-        if (location && location !== 'All') query = query.eq('location', location);
+    const { data: properties, error } = await query;
+    if (error) return console.error(error);
 
-        const { data: properties, error } = await query;
-        if (error) return console.error(error);
+    let userSelected = [];
+    if (CURRENT_USER) {
+      const { data: selectedData } = await supabase
+        .from('selected_properties')
+        .select('property_id')
+        .eq('selected_by', CURRENT_USER.id);
 
-        propertiesContainer.innerHTML = '';
-
-        properties.forEach(prop => {
-            const isSelected = prop.selected_users?.includes(CURRENT_USER?.id) || false;
-            const propCard = document.createElement('div');
-            propCard.className = 'property-card';
-
-            const imageUrl = prop.image_path
-                ? supabase.storage.from('property-media').getPublicUrl(prop.image_path).data.publicUrl
-                : 'https://via.placeholder.com/360x240';
-
-            const videoUrl = prop.video_path
-                ? supabase.storage.from('property-media').getPublicUrl(prop.video_path).data.publicUrl
-                : null;
-
-            propCard.innerHTML = `
-                <div class="property-media-wrapper">
-                    <img src="${imageUrl}" alt="${prop.title}" class="property-image">
-                    ${videoUrl ? `<div class="play-video-overlay" onclick="playVideo('${videoUrl}')"><i class="fas fa-play"></i></div>` : ''}
-                    ${isSelected ? '<div class="selected-overlay">Selected</div>' : ''}
-                    <div class="price-tag">RWF ${prop.price}</div>
-                </div>
-                <div class="property-details">
-                    <h3>${prop.title}</h3>
-                    <p><i class="fas fa-map-marker-alt"></i> ${prop.location}</p>
-                    <p><i class="fas fa-user"></i> Owner: ${prop.owner_name || prop.owner}</p>
-                    <p><i class="fas fa-phone-alt"></i> <a class="tel" href="tel:${prop.phone}">${prop.phone}</a></p>
-                    <p class="property-description">${prop.description}</p>
-                    <button class="select-btn" ${isSelected ? 'disabled class="selected"' : ''} onclick="selectHouse(${prop.id}, this)">
-                        ${isSelected ? 'Selected' : 'Select House'}
-                    </button>
-                </div>
-            `;
-            propertiesContainer.appendChild(propCard);
-        });
-    } catch (err) {
-        console.error(err);
+      userSelected = selectedData?.map(item => item.property_id) || [];
     }
+
+    propertiesContainer.innerHTML = '';
+    properties.forEach(prop => {
+      const isSelected = userSelected.includes(prop.id);
+
+      const imageUrl = prop.image_path
+        ? supabase.storage.from('property-media').getPublicUrl(prop.image_path).data.publicUrl
+        : 'https://via.placeholder.com/360x240';
+
+      const videoUrl = prop.video_path
+        ? supabase.storage.from('property-media').getPublicUrl(prop.video_path).data.publicUrl
+        : null;
+
+      const propCard = document.createElement('div');
+      propCard.className = 'property-card';
+      propCard.innerHTML = `
+        <div class="property-media-wrapper">
+          <img src="${imageUrl}" alt="${prop.title}">
+          ${videoUrl ? `<div class="play-video-overlay" onclick="playVideo('${videoUrl}')"><i class="fas fa-play"></i></div>` : ''}
+          ${isSelected ? '<div class="selected-overlay">Selected</div>' : ''}
+          <div class="price-tag">RWF ${prop.price}</div>
+        </div>
+        <div class="property-details">
+          <h3>${prop.title}</h3>
+          <p><i class="fas fa-map-marker-alt"></i> ${prop.location}</p>
+          <p><i class="fas fa-user"></i> Owner: ${prop.owner_name || prop.owner}</p>
+          <p><i class="fas fa-phone-alt"></i> <a class="tel" href="tel:${prop.phone}">${prop.phone}</a></p>
+          <p>${prop.description}</p>
+          <button class="select-btn ${isSelected ? 'selected' : ''}" ${isSelected ? 'disabled' : ''} onclick="selectHouse('${prop.id}', this)">
+            ${isSelected ? 'Selected' : 'Select House'}
+          </button>
+        </div>
+      `;
+      propertiesContainer.appendChild(propCard);
+    });
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-// --- Select House Function ---
+// --- Select House ---
 window.selectHouse = async function(propertyId, btn) {
-    if (!CURRENT_USER) {
-        alert('Please login first.');
-        return;
-    }
+  if (!CURRENT_USER) {
+    alert("Please login first.");
+    return (window.location.href = "Login.html");
+  }
 
-    try {
-        // Update property selection in Supabase
-        const { data, error } = await supabase.from('properties').update({
-            selected_users: supabase.raw('array_append(selected_users, ?)', [CURRENT_USER.id])
-        }).eq('id', propertyId);
+  try {
+    const { data: exists } = await supabase
+      .from('selected_properties')
+      .select('*')
+      .eq('property_id', propertyId)
+      .eq('selected_by', CURRENT_USER.id)
+      .maybeSingle();
 
-        if (error) {
-            console.error(error);
-            alert('Error selecting property.');
-            return;
-        }
+    if (exists) return alert("Already selected.");
 
-        btn.textContent = 'Selected';
-        btn.disabled = true;
-        btn.classList.add('selected');
-    } catch (err) {
-        console.error(err);
-    }
+    await supabase.from('selected_properties').insert([{ property_id: propertyId, selected_by: CURRENT_USER.id }]);
+
+    btn.textContent = "Selected";
+    btn.disabled = true;
+    btn.classList.add("selected");
+
+    const overlay = document.createElement("div");
+    overlay.className = "selected-overlay";
+    overlay.textContent = "Selected";
+    btn.closest(".property-card").querySelector(".property-media-wrapper").appendChild(overlay);
+  } catch (err) {
+    console.error(err);
+    alert("Error selecting property.");
+  }
 };
 
-// --- Play Video ---
+// --- Video ---
 window.playVideo = function(url) {
-    modalVideo.src = url;
-    videoModal.style.display = 'flex';
-    modalVideo.play();
+  modalVideo.src = url;
+  videoModal.style.display = "flex";
+  modalVideo.play();
 };
-
-// --- Close Video Modal ---
 closeBtn.onclick = () => {
-    modalVideo.pause();
-    modalVideo.src = '';
-    videoModal.style.display = 'none';
+  modalVideo.pause();
+  modalVideo.src = "";
+  videoModal.style.display = "none";
 };
+videoModal.addEventListener("click", (e) => {
+  if (e.target === videoModal) closeBtn.onclick();
+});
 
-// --- Filter by location ---
-locationFilter.addEventListener('change', renderIndexProperties);
-
-// --- Loading Screen Simulation ---
-body.classList.add('no-scroll');
-const loadingMessages = [
-    "Initializing RentHub...",
-    "Loading property database...",
-    "Connecting to servers...",
-    "Preparing your experience...",
-    "We are happy to be with you right now",
-    "Almost ready..."
-];
-
-let progress = 0;
-let messageIndex = 0;
+// --- Init ---
+body.classList.add("no-scroll");
+const messages = ["Initializing RentHub...", "Loading data...", "Connecting...", "Preparing...", "Almost ready..."];
+let progress = 0, idx = 0;
 const interval = setInterval(async () => {
-    progress += 2;
-    if (progressText) progressText.textContent = progress + "%";
+  progress += 2;
+  if (progressText) progressText.textContent = progress + "%";
+  if (progress % 20 === 0 && idx < messages.length) loadingTextElement.textContent = messages[idx++];
 
-    if (progress % 20 === 0 && messageIndex < loadingMessages.length - 1) {
-        messageIndex++;
-        if (loadingTextElement) loadingTextElement.textContent = loadingMessages[messageIndex];
-    }
-
-    if (progress >= 100) {
-        clearInterval(interval);
-
-        // Load user profile
-        await loadCurrentUserProfile();
-
-        // Load properties
-        await renderIndexProperties();
-
-        if (loadingScreen) {
-            loadingScreen.classList.add('fade-out');
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                body.classList.remove('no-scroll');
-            }, 500);
-        }
-    }
+  if (progress >= 100) {
+    clearInterval(interval);
+    await checkLoginStatus();
+    await renderIndexProperties();
+    loadingScreen.style.display = "none";
+    body.classList.remove("no-scroll");
+  }
 }, 100);
 
 // --- Section Toggle ---
-window.showSection = function(sectionId) {
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(sec => sec.classList.remove('active'));
-    const target = document.getElementById(sectionId);
-    if (target) target.classList.add('active');
+window.showSection = function(id) {
+  document.querySelectorAll(".content-section").forEach(sec => sec.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 };
-
-// --- Highlight active menu item ---
-const menuLinks = document.querySelectorAll('.menu li a');
-menuLinks.forEach(link => {
-    link.addEventListener('click', function() {
-        menuLinks.forEach(l => l.classList.remove('active-link'));
-        this.classList.add('active-link');
-    });
-});
-
 </script>
-
 
 </body>
 </html>

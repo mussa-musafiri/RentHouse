@@ -130,14 +130,142 @@ footer { text-align:center; padding:20px; background:#2c3e50; color:white; margi
 }
 
 /* ---------- RESPONSIVE ---------- */
-@media(max-width:1024px){
-  .sidebar { width:200px; }
-  .main-content { margin-left:200px; width:calc(100% - 200px);}
+/* ---------- TABLET: 1024px and below ---------- */
+@media screen and (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+  }
+  .main-content {
+    margin-left: 200px;
+    width: calc(100% - 200px);
+  }
+  .form-row {
+    flex-wrap: wrap;
+  }
+  .media-previews {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .property-card {
+    width: 280px;
+  }
 }
-@media(max-width:768px){
-  .sidebar { position:relative; width:100%; height:auto; }
-  .main-content { margin-left:0; width:100%; padding:15px;}
-  .form-row { flex-direction:column; }
+
+/* ---------- MOBILE: 768px and below ---------- */
+/* ---------- MOBILE: 700px and below ---------- */
+@media screen and (max-width: 700px) {
+  /* Sidebar becomes horizontal top nav */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0;
+    z-index: 1000;
+    border-bottom: 1px solid #ddd;
+  }
+
+  /* Hide sidebar header text */
+  .sidebar-header {
+    display: none;
+  }
+
+  /* Menu links as horizontal items */
+  .sidebar ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    padding: 0;
+  }
+
+  .sidebar ul li {
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    text-align: center;
+  }
+
+  .sidebar ul li a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 8px 0;
+  }
+
+  .sidebar ul li a i {
+    font-size: 20px;
+  }
+
+  /* Main content pushed below the navbar */
+  .main-content {
+    margin-left: 0;
+    margin-top: 60px;
+    width: 100%;
+  }
+}
+@media screen and (max-width: 768px) {
+  /* Sidebar becomes horizontal top nav */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0;
+    z-index: 1000;
+    border-bottom: 1px solid #ddd;
+  }
+
+  /* Hide sidebar header text */
+  .sidebar-header {
+    display: none;
+  }
+
+  /* Menu links as horizontal items */
+  .sidebar ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    padding: 0;
+  }
+
+  .sidebar ul li {
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    text-align: center;
+  }
+
+  .sidebar ul li a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 8px 0;
+  }
+
+  .sidebar ul li a i {
+    font-size: 20px;
+  }
+
+  /* Main content pushed below the navbar */
+  .main-content {
+    margin-left: 0;
+    margin-top: 60px;
+    width: 100%;
+  }
 }
 
 
@@ -414,22 +542,46 @@ window.editProperty=async id=>{
 };
 
 // ---------- SELECTED PROPERTIES ----------
+// ---------- SELECTED PROPERTIES ----------
 async function renderSelectedProperties() {
-  const { data, error } = await supabase.from('selected_properties')
-    .select('*, properties(*)') // join properties table
+  // Fetch selected properties with related property and user data
+  const { data, error } = await supabase
+    .from('selected_properties')
+    .select(`
+      id,
+      selected_at,
+      properties:property_id(*),
+      site_users:selected_by(id, full_name, phone)
+    `)
     .order('selected_at', { ascending: false });
 
   const container = document.getElementById('selectedProperties');
   container.innerHTML = '';
-  if (error) { container.innerHTML = `Error: ${error.message}`; return; }
-  if (!data.length) { container.innerHTML = '<p>No selected properties.</p>'; return; }
+
+  if (error) {
+    container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+    return;
+  }
+
+  if (!data.length) {
+    container.innerHTML = '<p>No selected properties.</p>';
+    return;
+  }
 
   data.forEach(sel => {
     const p = sel.properties;
+    const user = sel.site_users;
+
     const div = document.createElement('div');
     div.className = 'property-card';
-    const imageUrl = p.image_path ? supabase.storage.from('property-media').getPublicUrl(p.image_path).data.publicUrl : 'https://via.placeholder.com/320x200';
-    const videoUrl = p.video_path ? supabase.storage.from('property-media').getPublicUrl(p.video_path).data.publicUrl : null;
+
+    const imageUrl = p.image_path
+      ? supabase.storage.from('property-media').getPublicUrl(p.image_path).data.publicUrl
+      : 'https://via.placeholder.com/320x200';
+
+    const videoUrl = p.video_path
+      ? supabase.storage.from('property-media').getPublicUrl(p.video_path).data.publicUrl
+      : null;
 
     div.innerHTML = `
       <img src="${imageUrl}" class="property-image">
@@ -439,7 +591,14 @@ async function renderSelectedProperties() {
         <div class="property-price">RWF ${p.price}</div>
         <div class="property-description">${p.description}</div>
         ${videoUrl ? `<video class="video-preview" controls src="${videoUrl}" style="margin-top:10px; max-width:100%; border-radius:6px;"></video>` : ''}
-      </div>`;
+        <div class="property-owner">
+          <strong>Selected By:</strong> ${user?.full_name ?? 'Guest'}<br>
+          ${user?.phone ? `Phone: ${user.phone}` : ''}
+          <br><em>At: ${new Date(sel.selected_at).toLocaleString()}</em>
+        </div>
+      </div>
+    `;
+
     container.appendChild(div);
   });
 }

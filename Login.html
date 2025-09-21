@@ -8,63 +8,395 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI',sans-serif;overflow-x:hidden;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;}
-.main-container{display:flex;width:100%;max-width:1200px;min-height:700px;background:rgba(255,255,255,0.9);border-radius:20px;overflow:hidden;box-shadow:0 15px 50px rgba(0,0,0,0.2);}
-.left-panel{flex:1;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:40px;display:flex;flex-direction:column;justify-content:space-between;}
-.logo{display:flex;align-items:center;margin-bottom:30px;}
-.logo i{font-size:32px;margin-right:15px;}
-.logo h1{font-size:28px;font-weight:700;}
-.tagline{margin-bottom:40px;font-size:18px;line-height:1.6;}
-.features{margin-bottom:40px;}
-.feature{display:flex;align-items:center;margin-bottom:20px;}
-.feature i{font-size:20px;margin-right:15px;width:24px;text-align:center;}
-.social-links{display:flex;gap:15px;}
-.social-links a{color:white;font-size:20px;transition:transform 0.3s;}
-.social-links a:hover{transform:translateY(-3px);}
-.right-panel{flex:1;padding:40px;display:flex;align-items:center;justify-content:center;}
-.form-container{width:100%;max-width:400px;}
-.form{width:100%;}
-.form-header{text-align:center;margin-bottom:30px;}
-.form-header h2{font-size:28px;color:#333;margin-bottom:10px;}
-.form-header p{color:#777;}
-.input-group{position:relative;margin-bottom:25px;}
-.input-group i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#764ba2;}
-.input-group input{width:100%;padding:15px 15px 15px 45px;border:1px solid #ddd;border-radius:8px;font-size:16px;transition:all 0.3s;}
-.input-group input:focus{border-color:#764ba2;box-shadow:0 0 0 2px rgba(118,75,162,0.2);outline:none;}
-.input-group label{position:absolute;left:45px;top:50%;transform:translateY(-50%);color:#999;pointer-events:none;transition:all 0.3s;}
-.input-group input:focus + label, .input-group input:not(:placeholder-shown) + label{top:-10px;left:15px;font-size:12px;background:white;padding:0 8px;color:#764ba2;}
-.submit-btn{width:100%;padding:15px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;}
-.submit-btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(118,75,162,0.3);}
-.form-toggle{text-align:center;margin-top:25px;color:#777;}
-.form-toggle a{color:#764ba2;text-decoration:none;font-weight:600;}
-.form-toggle a:hover{text-decoration:underline;}
-.success-message,.error-message{padding:12px;border-radius:8px;margin-bottom:20px;display:none;}
-.success-message{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
-.error-message{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}
-.hidden{display:none;}
+body{font-family:'Segoe UI',sans-serif;overflow-x:hidden;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;}
+.background-animation {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+z-index: -1;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.floating-shapes {
+position: absolute;
+width: 100%;
+height: 100%;
+overflow: hidden;
+}
+
+.shape {
+position: absolute;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 50%;
+animation: float 20s infinite ease-in-out;
+}
+
+.shape:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+.shape:nth-child(2) { width: 120px; height: 120px; left: 80%; animation-delay: 3s; }
+.shape:nth-child(3) { width: 60px; height: 60px; left: 50%; animation-delay: 6s; }
+.shape:nth-child(4) { width: 100px; height: 100px; left: 70%; animation-delay: 9s; }
+.shape:nth-child(5) { width: 90px; height: 90px; left: 20%; animation-delay: 12s; }
+
+@keyframes float {
+0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+10%, 90% { opacity: 1; }
+50% { transform: translateY(-100px) rotate(180deg); }
+}
+
+.main-container {
+display: flex;
+min-height: 100vh;
+position: relative;
+}
+
+.left-panel {
+flex: 1;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 2rem;
+text-align: center;
+color: white;
+position: relative;
+}
+        
+
+.logo {
+display: flex;
+align-items: center;
+margin-bottom: 2rem;
+animation: slideInLeft 1s ease-out;
+}
+
+.logo i {
+font-size: 3rem;
+margin-right: 1rem;
+background: linear-gradient(45deg, #ff6b6b, #feca57);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.3));
+}
+
+.logo h1 {
+font-size: 2.5rem;
+font-weight: 700;
+background: linear-gradient(45deg, #ffffff, #f1c40f);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.play-video-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 28px;
+  padding: 12px 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 20;
+}
+
+.play-video-icon:hover {
+  background: rgba(0,0,0,0.8);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.tagline {
+font-size: 1.2rem;
+margin-bottom: 3rem;
+opacity: 0.9;
+line-height: 1.6;
+animation: slideInLeft 1s ease-out 0.3s both;
+}
+       
+
+.features {
+display: grid;
+gap: 1.5rem;
+animation: slideInLeft 1s ease-out 0.6s both;
+}
+
+.feature {
+display: flex;
+align-items: center;
+padding: 1rem;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 15px;
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.2);
+transition: all 0.3s ease;
+}
+
+.feature:hover {
+transform: translateX(10px);
+background: rgba(255, 255, 255, 0.15);
+}
+
+.feature i {
+font-size: 1.5rem;
+margin-right: 1rem;
+color: #feca57;
+}
+
+.social-links {
+display: flex;
+gap: 1rem;
+margin-top: 3rem;
+animation: slideInLeft 1s ease-out 0.9s both;
+}
+
+.social-links a {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 50px;
+height: 50px;
+border-radius: 50%;
+background: rgba(255, 255, 255, 0.1);
+color: white;
+text-decoration: none;
+transition: all 0.3s ease;
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.social-links a:hover {
+transform: translateY(-5px) scale(1.1);
+background: rgba(255, 255, 255, 0.2);
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.right-panel {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 2rem;
+position: relative;
+}
+
+.form-container {
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(20px);
+border-radius: 25px;
+padding: 3rem;
+width: 100%;
+max-width: 450px;
+box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+border: 1px solid rgba(255, 255, 255, 0.3);
+animation: slideInRight 1s ease-out;
+}
+
+.form-header {
+text-align: center;
+margin-bottom: 2rem;
+}
+
+.form-header h2 {
+font-size: 2rem;
+color: #333;
+margin-bottom: 0.5rem;
+background: linear-gradient(45deg, #667eea, #764ba2);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+
+.form-header p {
+color: #666;
+font-size: 0.9rem;
+}
+
+.input-group {
+position: relative;
+margin-bottom: 1.5rem;
+}
+
+.input-group input {
+width: 100%;
+padding: 1rem 1rem 1rem 3rem;
+border: 2px solid #e1e8ed;
+border-radius: 15px;
+font-size: 1rem;
+transition: all 0.3s ease;
+background: rgba(255, 255, 255, 0.9);
+}
+
+.input-group input:focus {
+outline: none;
+border-color: #667eea;
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+}
+
+.input-group i {
+position: absolute;
+left: 1rem;
+top: 50%;
+transform: translateY(-50%);
+color: #667eea;
+font-size: 1.1rem;
+}
+
+.input-group label {
+position: absolute;
+left: 3rem;
+top: 50%;
+transform: translateY(-50%);
+color: #999;
+pointer-events: none;
+transition: all 0.3s ease;
+font-size: 0.9rem;
+}
+
+.input-group input:focus + label,
+.input-group input:valid + label {
+top: -10px;
+left: 1rem;
+font-size: 0.8rem;
+color: #667eea;
+background: white;
+padding: 0 0.5rem;
+}
+
+.submit-btn {
+width: 100%;
+padding: 1rem;
+background: linear-gradient(45deg, #667eea, #764ba2);
+color: white;
+border: none;
+border-radius: 15px;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s ease;
+margin: 1rem 0;
+position: relative;
+overflow: hidden;
+}
+
+.submit-btn::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+transition: left 0.5s;
+}
+
+.submit-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn:hover::before {
+left: 100%;
+}
+
+.form-toggle {
+text-align: center;
+margin-top: 1.5rem;
+color: #666;
+}
+
+.form-toggle a {
+color: #667eea;
+text-decoration: none;
+font-weight: 600;
+transition: all 0.3s ease;
+}
+
+.form-toggle a:hover {
+color: #764ba2;
+text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+.form {
+transition: all 0.5s ease;
+}
+
+.form.hidden {
+opacity: 0;
+transform: translateX(20px);
+pointer-events: none;
+position: absolute;
+}
+
+.success-message {
+background: linear-gradient(45deg, #00b894, #00cec9);
+color: white;
+padding: 1rem;
+border-radius: 15px;
+margin-bottom: 1rem;
+text-align: center;
+animation: slideInDown 0.5s ease-out;
+display: none;
+}
+
+.error-message {background: linear-gradient(45deg, #e17055, #fd79a8);color: white;padding: 1rem;border-radius: 15px;margin-bottom: 1rem;text-align: center;animation: shake 0.5s ease-out;display: none;}
+
+@keyframes slideInLeft {
+from { opacity: 0; transform: translateX(-50px); }
+to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+from { opacity: 0; transform: translateX(50px); }
+to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInDown {
+from { opacity: 0; transform: translateY(-20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-5px); }
+75% { transform: translateX(5px); }
+}
+
 @media (max-width:900px){.main-container{flex-direction:column;max-width:500px;}.left-panel,.right-panel{padding:30px;}}
 </style>
 </head>
 <body>
 
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div><div class="shape"></div><div class="shape"></div>
+            <div class="shape"></div><div class="shape"></div>
+        </div>
+    </div>
 <div class="main-container">
-  <div class="left-panel">
-    <div class="logo"><i class="fas fa-home"></i><h1>RentHub</h1></div>
-    <div class="tagline"><p>Find your perfect home with ease. Connect with trusted landlords and discover amazing rental properties in your area.</p></div>
-    <div class="features">
-      <div class="feature"><i class="fas fa-search"></i><span>Smart Property Search</span></div>
-      <div class="feature"><i class="fas fa-shield-alt"></i><span>Verified Listings</span></div>
-      <div class="feature"><i class="fas fa-handshake"></i><span>Direct Owner Contact</span></div>
-      <div class="feature"><i class="fas fa-mobile-alt"></i><span>Mobile Friendly</span></div>
-    </div>
-    <div class="social-links">
-      <a href="#"><i class="fab fa-facebook-f"></i></a>
-      <a href="#"><i class="fab fa-twitter"></i></a>
-      <a href="#"><i class="fab fa-instagram"></i></a>
-      <a href="#"><i class="fab fa-whatsapp"></i></a>
-      <a href="#"><i class="fab fa-telegram"></i></a>
-    </div>
-  </div>
+   <div class="left-panel">
+            <div class="logo">
+                <i class="fas fa-home"></i>
+                <h1>RentHub</h1>
+            </div>
+            <div class="tagline">
+                <p>Find your perfect home with ease. Connect with trusted landlords and discover amazing rental properties in your area.</p>
+            </div>
+            <div class="features">
+                <div class="feature"><i class="fas fa-search"></i><span>Smart Property Search</span></div>
+                <div class="feature"><i class="fas fa-shield-alt"></i><span>Verified Listings</span></div>
+                <div class="feature"><i class="fas fa-handshake"></i><span>Direct Owner Contact</span></div>
+                <div class="feature"><i class="fas fa-mobile-alt"></i><span>Mobile Friendly</span></div>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-whatsapp"></i></a>
+                <a href="#"><i class="fab fa-telegram"></i></a>
+            </div>
+        </div>
 
   <div class="right-panel">
     <div class="form-container">
@@ -156,23 +488,48 @@ registerBtn.addEventListener('click', async e=>{
 });
 
 // LOGIN
-loginBtn.addEventListener('click', async e=>{
-  e.preventDefault(); clearMessages();
+loginBtn.addEventListener('click', async e => {
+  e.preventDefault();
+  clearMessages();
+
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
 
-  if(!username || !password){ showMessage('Fill all fields!',false); return; }
+  if (!username || !password) {
+    showMessage('Please fill all fields!', false);
+    return;
+  }
 
-  try{
-    const {data:user, error} = await supabase.from('site_users').select('*').eq('full_name', username).eq('password', password).single();
-    if(error || !user) throw new Error('Invalid username or password');
+  try {
+    // Fetch user from Supabase
+    const { data: user, error } = await supabase
+      .from('site_users')
+      .select('*')
+      .eq('full_name', username)
+      .eq('password', password)
+      .single();
 
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    showMessage(`Welcome back, ${user.full_name}!`);
-    setTimeout(()=>window.location.href='index.html',1500);
+    if (error || !user) {
+      showMessage('Invalid username or password!', false);
+      return;
+    }
 
-  }catch(err){ showMessage(err.message,false); }
+    // Save user ID locally for dashboard
+    localStorage.setItem('loggedInUserId', user.id);
+
+    showMessage(`Welcome back, ${user.full_name}!`, true);
+
+    // Redirect to dashboard after short delay
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1000);
+
+  } catch (err) {
+    console.error(err);
+    showMessage('Something went wrong. Please try again.', false);
+  }
 });
+
 </script>
 
 </body>
